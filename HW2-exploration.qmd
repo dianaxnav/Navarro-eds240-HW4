@@ -1,0 +1,93 @@
+---
+title: "Homework Assignment #2"
+subtitle: "Part 2"
+author: "Diana Navarro"
+date: 2024-02-03
+toc: true
+format: html
+---
+# Part 2A
+
+## Load all libraries 
+
+```{r, message = F}
+#load all the packages and libraries needed 
+library(tidyverse)
+library(janitor)
+library(treemap)
+library(plotly)
+```
+
+## Load in the data set 
+```{r, message = F}
+#load in the dataset 
+bananas <- read_csv("bananaindex.csv")
+```
+
+## Clean/wrangle data 
+
+```{r}
+#clean up your data set
+
+#take a look at the first couple columns 
+head(bananas)
+
+#clean up the names of the bananas dataset 
+clean_bananas <- bananas %>% 
+  clean_names() %>% 
+  select(entity, bananas_index_kg, bananas_index_1000_kcalories, bananas_index_100g_protein, emissions_kg, land_use_kg)
+```
+
+## Do some data exploration 
+
+```{r}
+#check out the dimensions 
+dim(bananas)
+
+#check out the summary 
+summary(bananas)
+
+```
+## Plotting some of the data 
+
+```{r}
+#make a lollipop plot of the data 
+banana_1 <- clean_bananas %>%  
+  ggplot(aes(y = bananas_index_kg, #call the y variable 
+             x = entity)) +
+  ggalt::geom_lollipop() +
+  coord_flip()
+#show the plot 
+banana_1
+
+#plot the tree map
+banana_2 <- treemap(clean_bananas, #call the data 
+            index="entity",# call the y column
+            vSize="bananas_index_kg", #call the x column
+            type="index") 
+
+
+# Create an interactive scatter plot
+banana_3 <- plot_ly(clean_bananas, y = ~entity, 
+                    x = ~bananas_index_kg,
+                    type = 'scatter',
+                    mode = 'markers', 
+               marker = list(size = 8)) 
+
+# Show the interactive chart in the R Studio Viewer
+banana_3
+```
+
+# Part 2B
+
+**What have you learned about your data? Have any potentially interesting patterns emerged? (5-8 sentences)**
+
+The point of this data is to show emissions per kg of each food listed in terms of the banana. The banana was chosen as a comparison because of it's 'middling climate impact and nutritional value.' Some patterns that are interesting that I immediately notice in ALL data visualizations are meat and dairy related foods. This may not be surprising, but seeing the ratio box in the treemap puts things into perspective for me. I can see that they have a tremendous impact in terms of the emissions per kg compared to the banana. I think the only issue I may struggle with is trying to portray the right message. I can see that the visual data exploration is very helpful in selecting a plot for HW4. 
+
+**In HW #1, you outlined some questions that you wanted to answer using these data. Have you made any strides towards answering those questions? If yes, how so? If no, what next steps do you need to take (e.g. I need to create X plot type, I still need to track down Y data, I need to restructure existing data so that you can visualize it in Z ways, etc.)? (8-12 sentences)**
+
+The question I had concerned the emissions and the price related to these items, but I decided to steer in a different direction and hopefully observe the relationship between certain kinds of products. Since there are 160 different kinds of foods, I may need to search for a data set or manually change the data set to add the different types of food. If I am able to do this, I feel I could use group by to compare product types rather than 160 different kinds of food which seem overwhelming on the plot. However, I do appreciate the way treemap has visualized the data. I interpret best with box forms, so what sticks out to me is beef and cheese. I am interested in seeing the relationship between that and land use as well. The data was already very clean so cleaning/wrangling isn't too much of an issue. I am just unsure if I should add more data or compare a different relationship. 
+
+**What challenges do you foresee encountering with your data? These can be data wrangling and / or visualization challenges. (4-6 sentences)**
+
+I see a couple challenges with my data in terms of finding other similar data sets that show the class of the foods I have. I am uncertain, but since its only 160 foods, I can probably find the class of these and manually add it to the data set. I am unsure if that is inefficient, but definitely more research on similar data sets may be an issue. If I decide to leave the data set and use the treemap(or just another visualization in general), I may be overwhelmed with the amount of observations in one plot. So far, the treemap is one of my favorites. 
