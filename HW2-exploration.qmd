@@ -34,8 +34,8 @@ head(bananas)
 
 #clean up the names of the bananas dataset 
 clean_bananas <- bananas %>% 
-  clean_names() %>% 
-  select(entity, bananas_index_kg, bananas_index_1000_kcalories, bananas_index_100g_protein, emissions_kg, land_use_kg)
+  clean_names() %>%  #clean up the names 
+  select(entity, bananas_index_kg, bananas_index_1000_kcalories, bananas_index_100g_protein, emissions_kg, land_use_kg) #select only certain columns 
 ```
 
 ## Do some data exploration 
@@ -45,7 +45,7 @@ clean_bananas <- bananas %>%
 dim(bananas)
 
 #check out the summary 
-summary(bananas)
+summary(bananas) 
 
 ```
 ## Plotting some of the data 
@@ -68,11 +68,12 @@ banana_2 <- treemap(clean_bananas, #call the data
 
 
 # Create an interactive scatter plot
-banana_3 <- plot_ly(clean_bananas, y = ~entity, 
-                    x = ~bananas_index_kg,
-                    type = 'scatter',
-                    mode = 'markers', 
-               marker = list(size = 8)) 
+banana_3 <- plot_ly(clean_bananas, #call the data
+                    y = ~entity, #this is the y variable plot 
+                    x = ~bananas_index_kg, #x variable plot 
+                    type = 'scatter', #scatter plot 
+                    mode = 'markers', #points
+               marker = list(size = 8))  # size of the points
 
 # Show the interactive chart in the R Studio Viewer
 banana_3
