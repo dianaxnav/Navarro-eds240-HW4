@@ -52,7 +52,8 @@ library(viridis)
 library(ggiraph)
 library(showtext)
 library(patchwork)
-library(sysfonts)
+library(extrafont)
+
 ```
 
 ## Load in the data set
@@ -63,8 +64,11 @@ bananas <- read_csv(here::here("data","bananaindex.csv"))
 
 #download Google Fonts
 # Font_add_google searches google fonts repo and downloads the proper font files by name
-font_add_google(name = "Khula", family = "khula")
 
+font_add_google(name = "Khula", family = "khula")
+font_add_google(name = "Montserrat", family = "montserrat")
+
+#I am having trouble with this function. It won't properly load into my plots and will remove my axes and plot labels after running. For now I specified a regular font so it doesn't cut off anything, but will work on 
 ```
 
 ## Clean/wrangle data
@@ -105,18 +109,18 @@ dat.gg <- circleLayoutVertices(packing, npoints=50) #adjust the size of the plot
 p <- ggplot() + 
   geom_polygon_interactive(data = dat.gg, aes(x,y,group = id, fill=id, tooltip = data$text[id], data_id = id), colour = "darkgrey", alpha = 0.5) + #this will create the circular plots based off food category, adjust the outline and transparency color of the plot 
   scale_fill_viridis(option = "turbo") + #set the color scheme 
-  geom_text(data = data, aes(x,y, label = gsub("Group_", "", food_cat)), size=1.2, color="black", family = "serif") + #set text within the circles and edit font, and color 
+  geom_text(data = data, aes(x,y, label = gsub("Group_", "", food_cat)), size=1.2, color="black", family = "sans") + #set text within the circles and edit font, and color 
   theme_void() + #remove all axes and plot background 
   theme(legend.position="none", plot.margin=unit(c(0,0,0,0),"cm")) + #set the position of the plot 
   coord_equal() + #balance coordinates 
   labs(title = "Average GHG emissions(kg) by Food Group in 2022", subtitle = "According the to Bananas") + #set up title and subtitle 
-  theme(text = element_text(family = "serif"),
+  theme(text = element_text(family = "sans"),
         plot.title.position = "plot",
-    plot.title = element_text(face = "bold",
+        plot.title = element_text(face = "bold",
                               size = 18,
                               color = "black"), #edit the font of the title 
-    plot.subtitle = element_text(size = 16,
-                                 color = "darkgrey")) #edit the font of the subtitle 
+        plot.subtitle = element_text(size = 16,
+                                     color = "darkgrey")) #edit the font of the subtitle 
 
 # Turn it interactive
 widg <- ggiraph(ggobj = p, width_svg = 7, height_svg = 5)
@@ -146,7 +150,7 @@ w1 <- ggplot(data = bananas, aes(x = land_use_kg, y =
   geom_smooth(method = "lm", se = FALSE, color = "#FFE135") + #set the best line of fit 
   labs(title = "Relationship between Emissions and Land Use(kg)", x= "Emissions(kg)", y = "Land Use(kg)") +
   theme_minimal() +
-  theme(text = element_text(family = "serif"),
+  theme(text = element_text(family = "sans"),
         plot.title = element_text(face = "bold",
                                   size = 10,
                                   color = "black")) #edit the titles and texts
@@ -177,7 +181,7 @@ q1 <- ggplot(b1, aes(x = bananas_index_kg, y = entity)) +
   labs(y = "Entity", x = "Emissions(kg)", title = "Emissions(kg) of Meat Category") +  #label the proper titles 
   theme_classic() +
   scale_x_continuous(expand = c(0, 0)) + #this removes the space between 0 and axis 
-    theme(text = element_text(family = "serif"),
+    theme(text = element_text(family = "sans"),
           plot.title = element_text(face = "bold",
                             size = 10,
                             color = "black"),
@@ -192,7 +196,7 @@ q2 <- ggplot(b2, aes(x = bananas_index_kg, y = entity)) + #call the data
   labs(y = "Entity", x = "Emissions(kg)", title = "Emissions(kg) of Dairy Products") + #label the axes
   theme_classic() + #remove the gridlines 
   scale_x_continuous(expand = c(0, 0)) +
-    theme(text = element_text(family = "serif"),
+    theme(text = element_text(family = "sans"),
           plot.title = element_text(face = "bold",
                             size = 10,
                             color = "black"),
@@ -207,7 +211,7 @@ q3 <- ggplot(b3, aes(x = bananas_index_kg, y = entity)) + #call the data
   labs(y = "Entity", x = "Emissions(kg)", title = "Emissions(kg) of Seafood") + #label the axes
   theme_classic() + #remove gridlines 
   scale_x_continuous(expand = c(0, 0)) + #remove the space between x and 0 
-    theme(text = element_text(family = "serif"),
+    theme(text = element_text(family = "sans"),
       plot.title = element_text(face = "bold",
                             size = 10,
                             color = "black"),
