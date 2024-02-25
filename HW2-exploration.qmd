@@ -3,8 +3,9 @@ title: "Homework Assignment #2"
 subtitle: "Part 2"
 author: "Diana Navarro"
 date: 2024-02-03
-toc: true
-format: html
+format:
+  html:
+    embed-resources: true
 ---
 # Part 2A
 
@@ -21,21 +22,18 @@ library(plotly)
 ## Load in the data set 
 ```{r, message = F}
 #load in the dataset 
-bananas <- read_csv("bananaindex.csv")
+bananas <- read_csv(here::here("data","bananaindex.csv"))
 ```
 
 ## Clean/wrangle data 
 
 ```{r}
 #clean up your data set
-
-#take a look at the first couple columns 
-head(bananas)
-
 #clean up the names of the bananas dataset 
 clean_bananas <- bananas %>% 
   clean_names() %>%  #clean up the names 
-  select(entity, bananas_index_kg, bananas_index_1000_kcalories, bananas_index_100g_protein, emissions_kg, land_use_kg) #select only certain columns 
+  group_by(food_cat) %>% 
+  mutate(mean = mean(bananas_index_kg))
 ```
 
 ## Do some data exploration 
@@ -44,17 +42,17 @@ clean_bananas <- bananas %>%
 #check out the dimensions 
 dim(bananas)
 
-#check out the summary 
-summary(bananas) 
+unique(bananas$food_cat)
 
 ```
+
 ## Plotting some of the data 
 
 ```{r}
 #make a lollipop plot of the data 
 banana_1 <- clean_bananas %>%  
   ggplot(aes(y = bananas_index_kg, #call the y variable 
-             x = entity)) +
+             x = food_cat)) +
   ggalt::geom_lollipop() +
   coord_flip()
 #show the plot 
@@ -62,14 +60,14 @@ banana_1
 
 #plot the tree map
 banana_2 <- treemap(clean_bananas, #call the data 
-            index="entity",# call the y column
-            vSize="bananas_index_kg", #call the x column
+            index="food_cat",# call the y column
+            vSize="mean", #call the x column
             type="index") 
 
 
 # Create an interactive scatter plot
 banana_3 <- plot_ly(clean_bananas, #call the data
-                    y = ~entity, #this is the y variable plot 
+                    y = ~food_cat, #this is the y variable plot 
                     x = ~bananas_index_kg, #x variable plot 
                     type = 'scatter', #scatter plot 
                     mode = 'markers', #points

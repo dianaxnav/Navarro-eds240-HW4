@@ -1,0 +1,236 @@
+---
+title: "Homework Assignment #3"
+author: "Diana Navarro"
+date: 2024-02-03
+format:
+  html:
+    embed-resources: true
+---
+
+# The Banana Index 
+
+Which option do you plan to pursue? Restate your question(s).
+
+**I plan to pursue option #2 that includes the infographic.** 
+
+Restate your question(s).Has this changed at all since HW #1? If yes, how so? 
+
+**My overarching question will be: How do other food categories greenhouse gas emissions compare to the Banana? The first underlying question will investigate the potential relationship between land use and emissions: What is the relationship between land use(kg) and emissions (kg) between all food categories? The second question will zone into food groups that have a particularly high emissions: What are the exact emissions of each food entity of the three highest (food group) emitters? The last question will discuss why the food groups are being compared to the banana: Why the banana?**
+
+Explain which variables from your data set(s) you will use to answer your question(s).
+
+**I will use a variety of variables which may require wrangling the data multiple times for each visualization.**
+**bananas_index_kg: this is a ratio of emissions efficiency based off the banana (banana = 1)** 
+**emissions_kg: this is the emissions_kg in CO2-equivalent with non-CO2 with non-CO2 gases converted according to the amount of warming they cause over a 100-year timescale**
+**land_use_kg: this is the land use of each entity based off the weight of foods**
+**entity: this is the type of food**
+**food_cat: this is the category each entity belongs to**
+**I would like to note that I was unable to find a specific data set listing food categories and the foods listed in the banana index so I manually edited the data set so I am able to group by food categories of specific plots. --Let me know if this is an issue. ** 
+
+```{r}
+#| eval: true
+#| echo: false
+#| fig-align: "center"
+#| out-width: "100%"
+knitr::include_graphics(here::here("images/image1.png"))
+knitr::include_graphics(here::here("images/image2.png"))
+knitr::include_graphics(here::here("images/image3.png"))
+```
+
+
+## Load all libraries
+
+```{r, message = F}
+#load all the packages and libraries needed 
+library(tidyverse)
+library(janitor)
+library(treemap)
+library(plotly)
+library(packcircles)
+library(ggplot2)
+library(viridis)
+library(ggiraph)
+library(showtext)
+library(patchwork)
+library(sysfonts)
+```
+
+## Load in the data set
+
+```{r, message = F}
+#load in the dataset 
+bananas <- read_csv(here::here("data","bananaindex.csv"))
+
+#download Google Fonts
+# Font_add_google searches google fonts repo and downloads the proper font files by name
+font_add_google(name = "Khula", family = "khula")
+
+```
+
+## Clean/wrangle data
+
+```{r}
+#clean up your data set
+#clean up the names of the bananas dataset 
+clean_bananas <- bananas %>% 
+  clean_names() %>%  #clean up the names 
+  group_by(food_cat) %>% 
+  summarize(mean = mean(bananas_index_kg))
+```
+
+## Do some data exploration
+
+```{r}
+#check out the dimensions 
+#dim(bananas)
+
+#unique(bananas$food_cat)
+```
+
+#Plot Circular Packing Plot 
+
+### This will be the main plot that I will show in the infographic. This compares all food groups emissions to the banana. 
+```{r, message = FALSE}
+# Add a column with the text you want to display for each bubble:
+clean_bananas$text <- paste("Food Category: ",clean_bananas$food_cat, "\n", "value (kg):", clean_bananas$mean, "\n")
+
+n_distinct(clean_bananas$food_cat)
+
+# Generate the layout
+packing <- circleProgressiveLayout(clean_bananas$mean, sizetype='area') #make the circle layout
+data <- cbind(clean_bananas, packing) #combine your circle data to the banana data frame 
+dat.gg <- circleLayoutVertices(packing, npoints=50) #adjust the size of the plot 
+
+# create the plot initilizaing geom_polygon 
+p <- ggplot() + 
+  geom_polygon_interactive(data = dat.gg, aes(x,y,group = id, fill=id, tooltip = data$text[id], data_id = id), colour = "darkgrey", alpha = 0.5) + #this will create the circular plots based off food category, adjust the outline and transparency color of the plot 
+  scale_fill_viridis(option = "turbo") + #set the color scheme 
+  geom_text(data = data, aes(x,y, label = gsub("Group_", "", food_cat)), size=1.2, color="black", family = "serif") + #set text within the circles and edit font, and color 
+  theme_void() + #remove all axes and plot background 
+  theme(legend.position="none", plot.margin=unit(c(0,0,0,0),"cm")) + #set the position of the plot 
+  coord_equal() + #balance coordinates 
+  labs(title = "Average GHG emissions(kg) by Food Group in 2022", subtitle = "According the to Bananas") + #set up title and subtitle 
+  theme(text = element_text(family = "serif"),
+        plot.title.position = "plot",
+    plot.title = element_text(face = "bold",
+                              size = 18,
+                              color = "black"), #edit the font of the title 
+    plot.subtitle = element_text(size = 16,
+                                 color = "darkgrey")) #edit the font of the subtitle 
+
+# Turn it interactive
+widg <- ggiraph(ggobj = p, width_svg = 7, height_svg = 5)
+
+widg
+
+# save the widget
+# library(htmlwidgets)
+# saveWidget(widg, file=paste0( getwd(), "/HtmlWidget/circular_packing_interactive.html"))
+
+```
+**Trying to figure out how to highlight the banana circle-- tips appreciated**
+
+# Make a scatterplot 
+
+###The purpose of this visualization is to display the relationship between land use and emissions per kg. 
+
+```{r, warning = FALSE, message = FALSE}
+#this plot needs work --tips are welcome on showing this relationship and still working on the color scheme :) 
+
+#make a scatter plot of the relationship between land use and emissions 
+w1 <- ggplot(data = bananas, aes(x = land_use_kg, y =
+                                   emissions_kg)) + #call the data 
+  geom_point(alpha = 0.5, color = "cornflowerblue", size = 2.5) +
+  xlim(0,50) + #set the lim to take out any outliers
+  ylim(0,35) +
+  geom_smooth(method = "lm", se = FALSE, color = "#FFE135") + #set the best line of fit 
+  labs(title = "Relationship between Emissions and Land Use(kg)", x= "Emissions(kg)", y = "Land Use(kg)") +
+  theme_minimal() +
+  theme(text = element_text(family = "serif"),
+        plot.title = element_text(face = "bold",
+                                  size = 10,
+                                  color = "black")) #edit the titles and texts
+w1
+
+```
+
+# Bar Plot
+
+### The purpose of this visualization is to display the exact emissions of each food entity for the three highest emitters(on average)
+```{r, warning = FALSE, message = FALSE}
+#subset the data for meat for first bar plot 
+b1 <- bananas %>%
+  clean_names() %>% 
+  filter(food_cat == "Meat")
+#subset the data for second bar plot 
+b2 <- bananas %>%
+  clean_names() %>% 
+  filter(food_cat == "Dairy")
+#subset the data for third bar plot 
+b3 <- bananas %>%
+  clean_names() %>% 
+  filter(food_cat == "Seafood")
+
+# Create a bar plot of each category - meat
+q1 <- ggplot(b1, aes(x = bananas_index_kg, y = entity)) +
+  geom_col(fill = "indianred", alpha = 0.6) + #call the data 
+  labs(y = "Entity", x = "Emissions(kg)", title = "Emissions(kg) of Meat Category") +  #label the proper titles 
+  theme_classic() +
+  scale_x_continuous(expand = c(0, 0)) + #this removes the space between 0 and axis 
+    theme(text = element_text(family = "serif"),
+          plot.title = element_text(face = "bold",
+                            size = 10,
+                            color = "black"),
+          axis.title.x = element_text(size = 10,
+                            color = "black"),
+          axis.title.y = element_text(size = 10,
+                            color = "black")) #edit text and theme 
+
+# create a bar plot of each category - dairy
+q2 <- ggplot(b2, aes(x = bananas_index_kg, y = entity)) + #call the data 
+  geom_col(fill = "#FFE135", alpha = 0.6) + #set the color and transparency
+  labs(y = "Entity", x = "Emissions(kg)", title = "Emissions(kg) of Dairy Products") + #label the axes
+  theme_classic() + #remove the gridlines 
+  scale_x_continuous(expand = c(0, 0)) +
+    theme(text = element_text(family = "serif"),
+          plot.title = element_text(face = "bold",
+                            size = 10,
+                            color = "black"),
+          axis.title.x = element_text(size = 10,
+                            color = "black"),
+          axis.title.y = element_text(size = 10,
+                            color = "black")) #edit the text and font 
+
+# create a bar plot of each category - seafood 
+q3 <- ggplot(b3, aes(x = bananas_index_kg, y = entity)) + #call the data 
+  geom_col(fill = "cornflowerblue", alpha = 0.6) + #set color and transparency 
+  labs(y = "Entity", x = "Emissions(kg)", title = "Emissions(kg) of Seafood") + #label the axes
+  theme_classic() + #remove gridlines 
+  scale_x_continuous(expand = c(0, 0)) + #remove the space between x and 0 
+    theme(text = element_text(family = "serif"),
+      plot.title = element_text(face = "bold",
+                            size = 10,
+                            color = "black"),
+          axis.title.x = element_text(size = 10,
+                            color = "black"),
+          axis.title.y = element_text(size = 10,
+                            color = "black"))#edit the text and font 
+
+q1
+q2
+q3
+#for some reason patchwork isn't working and I had issues with facet wrap so this technically counts as 1 visualization 
+
+```
+
+What challenges did you encounter or anticipate encountering as you continue to build / iterate on your visualizations in R?
+
+**As I commented in some code chunks, patchwork keeps giving me issues and doesn't properly add my plots together. I also am running into issues with the color scheme on my circular packing plot, I am using scale_color_manual and for some reason it doesn't register my palette. This is an issue I intend on fixing throughout the week** 
+
+What ggplot extension tools / packages do you need to use to build your visualizations? Are there any that we haven't covered in class that you'll be learning how to use for your visualizations?
+
+**So far in my first visualization I used the package {packingcircles}, but I was able to find plenty of resources from the sites Sam listed on helping me build a plot. I don't believe we have covered this in class, I do know that circles aren't usually great for displaying any statistical significance, but thats what my other visualizations are for.**
+
+What feedback do you need from the instructional team and / or your peers to ensure that your intended message is clear?
+
+**I want suggestions on how to fix my color palette! Also hopping that each plot and visualization makes sense put together, if not I can adjust visualizations and maybe change a plot (most likely mys scatterplot). Mostly I hope they can understand the message I am tryign to convey in the first plot, and then build off knowledge from the second and third plots.** 
