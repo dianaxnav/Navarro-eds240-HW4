@@ -33,8 +33,11 @@ Explain which variables from your data set(s) you will use to answer your questi
 #| fig-align: "center"
 #| out-width: "100%"
 knitr::include_graphics(here::here("images/image1.png"))
+#This is the file that I want to mirror my 2nd sub question
 knitr::include_graphics(here::here("images/image2.png"))
+#I would like scatterplot to look something similar to this as well
 knitr::include_graphics(here::here("images/image3.png"))
+#this is the outline of how i want my infographic to look 
 ```
 
 
