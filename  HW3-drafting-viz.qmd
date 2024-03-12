@@ -70,6 +70,7 @@ bananas <- read_csv(here::here("data","bananaindex.csv"))
 
 font_add_google(name = "Khula", family = "khula")
 font_add_google(name = "Montserrat", family = "montserrat")
+showtext_auto()
 
 #I am having trouble with this function. It won't properly load into my plots and will remove my axes and plot labels after running. For now I specified a regular font so it doesn't cut off anything, but will work on 
 ```
@@ -117,7 +118,7 @@ p <- ggplot() +
   theme(legend.position="none", plot.margin=unit(c(0,0,0,0),"cm")) + #set the position of the plot 
   coord_equal() + #balance coordinates 
   labs(title = "Average GHG emissions(kg) by Food Group in 2022", subtitle = "According the to Bananas") + #set up title and subtitle 
-  theme(text = element_text(family = "sans"),
+  theme(text = element_text(family = "khula"),
         plot.title.position = "plot",
         plot.title = element_text(face = "bold",
                               size = 18,
@@ -153,7 +154,7 @@ w1 <- ggplot(data = bananas, aes(x = land_use_kg, y =
   geom_smooth(method = "lm", se = FALSE, color = "#FFE135") + #set the best line of fit 
   labs(title = "Relationship between Emissions and Land Use(kg)", x= "Emissions(kg)", y = "Land Use(kg)") +
   theme_minimal() +
-  theme(text = element_text(family = "sans"),
+  theme(text = element_text(family = "khula"),
         plot.title = element_text(face = "bold",
                                   size = 10,
                                   color = "black")) #edit the titles and texts
@@ -184,7 +185,7 @@ q1 <- ggplot(b1, aes(x = bananas_index_kg, y = entity)) +
   labs(y = "Entity", x = "Emissions(kg)", title = "Emissions(kg) of Meat Category") +  #label the proper titles 
   theme_classic() +
   scale_x_continuous(expand = c(0, 0)) + #this removes the space between 0 and axis 
-    theme(text = element_text(family = "sans"),
+    theme(text = element_text(family = "khula"),
           plot.title = element_text(face = "bold",
                             size = 10,
                             color = "black"),

@@ -1,0 +1,321 @@
+---
+title: "Final infographic"
+author: "Diana Navarro"
+date: 2024-03-09
+format:
+  html:
+    embed-resources: true
+---
+
+## Load all libraries
+
+```{r, message = F}
+#load all the packages and libraries needed 
+library(tidyverse)
+library(janitor)
+library(treemap)
+library(plotly)
+library(packcircles)
+library(ggplot2)
+library(viridis)
+library(ggiraph)
+library(showtext)
+library(patchwork)
+library(extrafont)
+
+```
+
+## Load in the data set
+
+```{r, message = F}
+#load in the dataset 
+bananas <- read_csv(here::here("data","bananaindex.csv"))
+
+#download Google Fonts
+# Font_add_google searches google fonts repo and downloads the proper font files by name
+
+font_add_google(name = "Khula", family = "khula")
+font_add_google(name = "Montserrat", family = "montserrat")
+showtext_auto()
+
+#I am having trouble with this function. It won't properly load into my plots and will remove my axes and plot labels after running. For now I specified a regular font so it doesn't cut off anything, but will work on 
+```
+
+## Clean/wrangle data
+
+```{r}
+#clean up your data set
+#clean up the names of the bananas dataset 
+clean_bananas <- bananas %>% 
+  clean_names() %>%  #clean up the names 
+  group_by(food_cat) %>% 
+  summarize(mean = mean(bananas_index_kg))
+```
+
+## Do some data exploration
+
+```{r}
+#check out the dimensions 
+#dim(bananas)
+
+#unique(bananas$food_cat)
+```
+
+#Plot Circular Packing Plot 
+
+### This will be the main plot that I will show in the infographic. This compares all food groups emissions to the banana. 
+```{r, message = FALSE, warning = F}
+# Add a column with the text you want to display for each bubble:
+clean_bananas$text <- paste("Food Category: ",clean_bananas$food_cat, "\n", "value (kg):", clean_bananas$mean, "\n")
+
+n_distinct(clean_bananas$food_cat)
+
+my_palette <- colorRampPalette(c("saddlebrown","sienna", "salmon3",
+                                 "orange3", "orange2", "orange", "gold",
+                                 "gold2", "goldenrod1",
+                                 "goldenrod2","goldenrod3",
+                                 "darkolivegreen", "olivedrab4",
+                                 "darkolivegreen3"))(23)
+
+# Generate the layout
+packing <- circleProgressiveLayout(clean_bananas$mean, sizetype='area') #make the circle layout
+data <- cbind(clean_bananas, packing) #combine your circle data to the banana data frame 
+dat.gg <- circleLayoutVertices(packing, npoints = 23) #adjust the size of the plot 
+
+# create the plot initilizaing geom_polygon 
+packing <- ggplot() + 
+  geom_polygon(data = dat.gg, aes(x,y,group = id, fill=id), alpha = 0.5) + #this will create the circular plots based off food category, adjust the outline and transparency color of the plot 
+  scale_fill_gradientn(colors = my_palette) + #set the color scheme 
+  geom_text(data = data, aes(x,y, size= mean, label = gsub("Group_", "", food_cat)), color="black", family = "montserrat") + #set text within the circles and edit font, and color  +
+  scale_size_continuous(range = c(15, 40)) +
+  theme_void() + #remove all axes and plot background 
+  theme(legend.position="none", plot.margin=unit(c(0,0,0,0),"in")) + #set the position of the plot 
+  coord_equal() + #balance coordinates 
+  labs(title = "Average GHG emissions(kg) by Food Group in 2022", subtitle = "Emissions(kg) compared to the Banana") + #set up title and subtitle 
+  theme(text = element_text(family = "montserrat"),
+        plot.title.position = "plot",
+        plot.title = element_text(face = "bold",
+                                  size = 120,
+                                  color = "tan4",
+                                  hjust = 0.5),
+        plot.subtitle = element_text(size = 100,
+                                     color = "grey",
+                                     hjust = 0.5),
+        plot.background = element_rect(fill= "oldlace", color = "oldlace"),
+        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+        plot.margin = unit(c(0.3,0,0,0),"in")) + #edit the font of the subtitle 
+  gghighlight::gghighlight((radius > 1.8 | food_cat == "Banana"),
+                           unhighlighted_params = list(colour = NULL, alpha = 0.3))
+
+# specify file path/name and png resolution & size
+ragg::agg_png(here::here("outputs", paste0("circularpacking", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
+              res = 320, width = 15, height =15, units = "in")
+
+packing
+
+```
+
+# Make a scatterplot 
+
+###The purpose of this visualization is to display the relationship between land use and emissions per kg. 
+
+```{r, warning = FALSE, message = FALSE}
+#this plot needs work --tips are welcome on showing this relationship and still working on the color scheme :) 
+
+# Create the main plot
+p1 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) +
+  geom_point(alpha = 0.5, color = "salmon3", size = 3) + 
+  theme_classic() +
+  xlim(0, 15) + 
+  ylim(0, 15) +
+  labs(title = "Land Use > 15 (kg)") +
+  theme(text = element_text(family = "montserrat"),
+        plot.title = element_text(size = 80, color = "tan4", hjust = 0.5),
+        plot.background = element_rect(color = "darkolivegreen", fill = "transparent", size = 2),
+        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(), 
+        axis.text = element_text(size = 80, color = "tan4"))
+
+# Create the inset plot
+p2 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) +
+  labs(title = "Relationship between Emissions and Land Use(kg) of Different Foods", y = "Emissions(kg)", x = "Land Use(kg)") +
+  theme_classic() +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0)) +
+  geom_point(alpha = 0.5, color = "salmon3", size = 5) +
+  geom_rect(aes(
+      xmin = 0,
+      xmax = 15,
+      ymin = 0,
+      ymax = 15),
+    color = "darkolivegreen",
+    fill = NA,
+    size = 1
+  ) +
+  geom_smooth(method = "lm", se = FALSE, color = "gold", linetype = "dashed") +
+  theme(text = element_text(family = "montserrat"),
+        plot.title = element_text(face = "bold", size = 120, color = "tan4", hjust = 0.5),
+        plot.margin = unit(c(0.3,0,0,0),"in"),
+        plot.background = element_rect(fill = "oldlace", color = "oldlace"),
+        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+        axis.text = element_text(size = 100, color = "tan4"),
+        axis.title.y = element_text(size = 100, color = "tan4"),
+        axis.title.x = element_text(size = 100, color = "tan4")
+        ) 
+
+scatterplot <- p2 + inset_element(p1, left=0.5, right=.9, bottom=.1, top=0.5)
+
+# specify file path/name and png resolution & size
+ragg::agg_png(here::here("outputs", paste0("scatter_plot", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
+              res = 320, width = 25, height =15, units = "in")
+
+scatterplot
+
+```
+
+# Bar Plot
+
+### The purpose of this visualization is to display the exact emissions of each food entity for the three highest emitters(on average)
+```{r, warning = FALSE, message = FALSE}
+#subset the data for meat for first bar plot 
+b1 <- bananas %>%
+  clean_names() %>% 
+  filter(food_cat == "Meat")
+#subset the data for second bar plot 
+b2 <- bananas %>%
+  clean_names() %>% 
+  filter(food_cat == "Dairy")
+#subset the data for third bar plot 
+b3 <- bananas %>%
+  clean_names() %>% 
+  filter(food_cat == "Seafood")
+
+# Reorder the levels of the entity variable based on bananas_index_kg
+b1$entity <- factor(b1$entity, levels = b1$entity[order(b1$bananas_index_kg, decreasing = TRUE)])
+
+# Create a bar plot of each category - meat
+q1 <- ggplot(b1, aes(y = bananas_index_kg, x = entity)) +
+  geom_col(fill = "salmon3", alpha = 0.6) + #call the data 
+  labs(x = NULL, y = "Emissions(kg)", title = "Meats") +  #label the proper titles 
+  theme_classic() +
+  scale_y_continuous(expand = c(0, 0)) + #this removes the space between 0 and axis 
+  theme(text = element_text(family = "montserrat"),
+        plot.title = element_text(face = "bold",
+                                  size = 100,
+                                  color = "tan4",
+                                  hjust = 0.5),
+        axis.title.x = element_text(size = 100,
+                                    color = "tan4"),
+        plot.background = element_rect(fill = "oldlace", color = "oldlace"),
+        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+        axis.text = element_text(size = 100, color = "tan4")) + #edit text and theme 
+  coord_flip()
+
+# Reorder the levels of the entity variable based on bananas_index_kg
+b2$entity <- factor(b2$entity, levels = b2$entity[order(b2$bananas_index_kg, decreasing = TRUE)])
+
+# create a bar plot of each category - dairy
+q2 <- ggplot(b2, aes(y = bananas_index_kg, x = entity)) + #call the data 
+  geom_col(fill = "gold", alpha = 0.6) + #set the color and transparency
+  labs(x = NULL, y = "Emissions(kg)", title = "Dairy Products") + #label the axes
+  theme_classic() + #remove the gridlines 
+  scale_y_continuous(expand = c(0, 0)) +
+  theme(text = element_text(family = "montserrat"),
+        plot.title = element_text(face = "bold",
+                                  size = 100,
+                                  color = "tan4",
+                                  hjust = 0.5),
+        axis.title.x = element_text(size = 100,
+                                    color = "tan4"),
+        plot.background = element_rect(fill = "oldlace", color = "oldlace"),
+        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+        axis.text = element_text(size = 100, color = "tan4")) + #edit the text and font 
+  coord_flip()
+
+# Reorder the levels of the entity variable based on bananas_index_kg
+b3$entity <- factor(b3$entity, levels = b3$entity[order(b3$bananas_index_kg, decreasing = TRUE)])
+
+# Plot with reordered levels
+q3 <- ggplot(b3, aes(x = entity, y = bananas_index_kg)) + 
+  geom_col(fill = "darkolivegreen", alpha = 0.6) + 
+  labs(x = NULL, y = "Emissions", title = "Seafood") + 
+  theme_classic() + 
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme(text = element_text(family = "montserrat"),
+        plot.title = element_text(face = "bold", size = 100, color = "tan4", hjust = 0.5),
+        axis.title.x = element_text(size = 100, color = "tan4"),
+        plot.background = element_rect(fill = "oldlace", color = "oldlace"),
+        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+        axis.text = element_text(size = 100, color = "tan4")) +
+  coord_flip()
+
+connected <-  (q1 + q2 + q3) 
+
+connected <- connected +
+  plot_annotation(
+    title = "Three Highest Emissions by Food Group",
+    theme = theme(text = element_text(family = "montserrat"),
+      plot.title = element_text(face = "bold", size = 120, hjust = 0.5, color = "tan4"),
+      panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+      plot.background = element_rect(fill= "oldlace", color = "oldlace"),
+      plot.margin = unit(c(0.3,0,0,0),"in"))
+    ) 
+
+# specify file path/name and png resolution & size
+ragg::agg_png(here::here("outputs", paste0("connected_bar", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
+              res = 320, width = 45, height = 20, units = "in")
+
+connected
+
+```
+
+```{r, warning = F, message = F}
+# library(grid)
+# 
+# img <- png::readPNG(here::here("bananaindex.png"))
+# 
+# # This line allows for the plots to display all in one visualization 
+# final_plot <- packing + scatterplot / connected + 
+#   
+#   # This function adjust the heights of the columns in the grid
+#   plot_layout(
+#     nrow = 2,
+#     ncol = 1,
+#     heights = c(20, 15, 15), 
+#     widths = c(20,15, 15)
+#   ) + 
+#   
+#   ## Here we are adding the annotation to the whole visualization by adding a title, subtitle, and caption 
+#   plot_annotation( 
+#   caption = "Visualization: Banana Index",
+#   title = "Climate Impacts of Food Categories Compared to the Banana",
+#   subtitle = str_wrap("The banana index provides a means to measure the greenhouse gas emissions associated with various foods, comparing them based on their weight, calorie content, or protein content in terms of equivalent bananas. These emissions are quantified in CO2-equivalents, accounting for non-CO2 gases by their respective impact on global warming over a 100-year period. The banana serves as a benchmark category against which other foods are compared.", 100),
+#   
+#   
+#   # This function is adjusting the margins of each annotation by color, size, font, and placement 
+#   theme = theme( 
+#     plot.margin = margin(10,10,5,10),
+#     plot.title = element_text(family = "montserrat", size = 80, color = "darkolivegreen", face = "bold", hjust = 0.5, margin = margin(10,10,10,0)),
+#     plot.subtitle = element_text(family = "montserrat", size = 65, color = "moccasin", hjust = 0.5, margin = margin(5,5,20,20), face = "bold"),
+#     plot.caption = element_text(family = "montserrat", size = 55, color = "darkolivegreen", hjust = 0.95, margin = margin(20,10,5,10)),
+#     plot.background = element_rect(fill = "black")
+#   ))
+# 
+# #save plot as PNG
+# #open plotting device to draw plot to a PNG file
+# 
+# # specify file path/name and png resolution & size
+# ragg::agg_png(here::here("outputs", paste0("banana_index", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
+#               res = 320, width = 15, height =20, units = "in")
+# 
+# #plot object that you want to draw
+# final_plot
+# 
+# #turn off plotting device
+# 
+# # once off, you should see your .png file appear in outputs/ folder
+# dev.off()
+```
+
+
