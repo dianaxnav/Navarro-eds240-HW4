@@ -36,19 +36,17 @@ bananas <- read_csv(here::here("data","bananaindex.csv"))
 
 font_add_google(name = "Khula", family = "khula")
 font_add_google(name = "Montserrat", family = "montserrat")
-showtext_auto()
+showtext_auto() #this will help fonts show when you render
 
-#I am having trouble with this function. It won't properly load into my plots and will remove my axes and plot labels after running. For now I specified a regular font so it doesn't cut off anything, but will work on 
 ```
 
 ## Clean/wrangle data
 
 ```{r}
-#clean up your data set
 #clean up the names of the bananas dataset 
 clean_bananas <- bananas %>% 
   clean_names() %>%  #clean up the names 
-  group_by(food_cat) %>% 
+  group_by(food_cat) %>%  #group by the food cat to find the mean of each 
   summarize(mean = mean(bananas_index_kg))
 ```
 
@@ -68,8 +66,9 @@ clean_bananas <- bananas %>%
 # Add a column with the text you want to display for each bubble:
 clean_bananas$text <- paste("Food Category: ",clean_bananas$food_cat, "\n", "value (kg):", clean_bananas$mean, "\n")
 
-n_distinct(clean_bananas$food_cat)
+n_distinct(clean_bananas$food_cat) #check how many categories you have 
 
+#this function creates a gradient color palette arranged in 23 different colors 
 my_palette <- colorRampPalette(c("saddlebrown","sienna", "salmon3",
                                  "orange3", "orange2", "orange", "gold",
                                  "gold2", "goldenrod1",
@@ -107,11 +106,10 @@ packing <- ggplot() +
   gghighlight::gghighlight((radius > 1.8 | food_cat == "Banana"),
                            unhighlighted_params = list(colour = NULL, alpha = 0.3))
 
-# specify file path/name and png resolution & size
-ragg::agg_png(here::here("outputs", paste0("circularpacking", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
-              res = 320, width = 15, height =15, units = "in")
+# # specify file path/name and png resolution & size
+# ragg::agg_png(here::here("outputs", paste0("circularpacking", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
+#               res = 320, width = 15, height =15, units = "in")
 
-packing
 
 ```
 
@@ -120,57 +118,115 @@ packing
 ###The purpose of this visualization is to display the relationship between land use and emissions per kg. 
 
 ```{r, warning = FALSE, message = FALSE}
-#this plot needs work --tips are welcome on showing this relationship and still working on the color scheme :) 
-
-# Create the main plot
-p1 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) +
-  geom_point(alpha = 0.5, color = "salmon3", size = 3) + 
-  theme_classic() +
-  xlim(0, 15) + 
-  ylim(0, 15) +
-  labs(title = "Land Use > 15 (kg)") +
-  theme(text = element_text(family = "montserrat"),
-        plot.title = element_text(size = 80, color = "tan4", hjust = 0.5),
-        plot.background = element_rect(color = "darkolivegreen", fill = "transparent", size = 2),
-        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(), 
-        axis.text = element_text(size = 80, color = "tan4"))
-
 # Create the inset plot
-p2 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) +
-  labs(title = "Relationship between Emissions and Land Use(kg) of Different Foods", y = "Emissions(kg)", x = "Land Use(kg)") +
+p1 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) + #call the data and x and y axis 
+  
+  geom_point(alpha = 0.5, color = "salmon3", size = 3) + #edit the size and color of points 
+  
   theme_classic() +
+  
+  xlim(0, 15) + #set the limits of the points you want zoomed in
+  ylim(0, 15) +
+  
+  labs(title = "Land Use > 15 (kg)") + #edit the title 
+  
+  theme(text = element_text(family = "montserrat"), #set the font
+        
+        #edit the text and color of plot title 
+        plot.title = element_text(size = 80, 
+                                  color = "tan4", 
+                                  hjust = 0.5), 
+        
+        #set the plot background border and fill color to be transparent to create a light green border
+        plot.background = element_rect(color = "darkolivegreen",
+                                       fill = "transparent", 
+                                       size = 2), 
+        
+        #edit the panel background color 
+        panel.background = element_rect(fill = "oldlace", 
+                                        color = "oldlace"), 
+        
+        axis.title.x = element_blank(), #remove the axis 
+        axis.title.y = element_blank(), #remove the axis 
+        
+        #set the axis text color 
+        axis.text = element_text(size = 80, color = "tan4")) 
+
+#call the data and set the x and y axis 
+p2 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) +
+  
+  #set the title and x and y axis 
+  labs(title = "Relationship between Emissions and Land Use(kg) of Different Foods", y = "Emissions(kg)", x = "Land Use(kg)") +
+  
+  #set the theme (i like it plain)
+  theme_classic() +
+  
+  #set this so that it removes the space between 0 and your starting plot point 
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0)) +
+  
+  #set the color and size of the point 
   geom_point(alpha = 0.5, color = "salmon3", size = 5) +
-  geom_rect(aes(
-      xmin = 0,
-      xmax = 15,
-      ymin = 0,
-      ymax = 15),
-    color = "darkolivegreen",
-    fill = NA,
-    size = 1
-  ) +
-  geom_smooth(method = "lm", se = FALSE, color = "gold", linetype = "dashed") +
+  
+  #outline the circle im referring to from my inset element
+  geom_rect(aes(xmin = 0, xmax = 15, ymin = 0,ymax = 15),
+            color = "darkolivegreen",
+            fill = NA,
+            size = 1) +
+  
+  #set the best line of fit to see relationship 
+  geom_smooth(method = "lm", 
+              se = FALSE, 
+              color = "darkolivegreen3", #edit the color 
+              linetype = "dashed") + #edit line type 
+  
+  #set theme and change font of all the plots
   theme(text = element_text(family = "montserrat"),
-        plot.title = element_text(face = "bold", size = 120, color = "tan4", hjust = 0.5),
+        
+        #edit the plot title by color, size, and center
+        plot.title = element_text(face = "bold", 
+                                  size = 80, 
+                                  color = "tan4", 
+                                  hjust = 0.5),
+        
+        #edit the plot margin(give some space between top)
         plot.margin = unit(c(0.3,0,0,0),"in"),
-        plot.background = element_rect(fill = "oldlace", color = "oldlace"),
-        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+        
+        #set the plot background color 
+        plot.background = element_rect(fill = "oldlace", 
+                                       color = "oldlace"),
+        #removes white space behind plot 
+        
+        #set the plot background color 
+        panel.background = element_rect(fill = "oldlace", 
+                                        color = "oldlace"),
+        
+        #set the axis text size and color 
         axis.text = element_text(size = 100, color = "tan4"),
         axis.title.y = element_text(size = 100, color = "tan4"),
         axis.title.x = element_text(size = 100, color = "tan4")
         ) 
 
-scatterplot <- p2 + inset_element(p1, left=0.5, right=.9, bottom=.1, top=0.5)
+#plot with the inset element and adjust margin 
+scatterplot <- p2 + inset_element(p1, 
+                                  left=0.5, 
+                                  right=.9, 
+                                  bottom=.1, 
+                                  top=0.5) +
+  
+  #edit the whole patchworked plot and fix the colors 
+  plot_annotation(theme = theme(
+    plot.background = element_rect(fill = "oldlace", 
+                                   color = "oldlace"),
+    panel.background = element_rect(fill = "oldlace", 
+                                    color = "oldlace")
+    )
+    )
 
-# specify file path/name and png resolution & size
-ragg::agg_png(here::here("outputs", paste0("scatter_plot", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
-              res = 320, width = 25, height =15, units = "in")
+# # specify file path/name and png resolution & size
+# ragg::agg_png(here::here("outputs", paste0("scatter_plot", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
+#               res = 320, width = 15, height =10, units = "in")
 
-scatterplot
 
 ```
 
@@ -178,49 +234,94 @@ scatterplot
 
 ### The purpose of this visualization is to display the exact emissions of each food entity for the three highest emitters(on average)
 ```{r, warning = FALSE, message = FALSE}
-#subset the data for meat for first bar plot 
+
+# Data Wrangling 
+#subset the data for meat for bar plot 
 b1 <- bananas %>%
   clean_names() %>% 
-  filter(food_cat == "Meat")
-#subset the data for second bar plot 
+  filter(food_cat == "Meat") #filter by meat only 
+
+#subset the data for dairy products for bar plot 
 b2 <- bananas %>%
   clean_names() %>% 
   filter(food_cat == "Dairy")
-#subset the data for third bar plot 
+
+#subset the data for seafood bar plot 
 b3 <- bananas %>%
   clean_names() %>% 
   filter(food_cat == "Seafood")
 
 # Reorder the levels of the entity variable based on bananas_index_kg
-b1$entity <- factor(b1$entity, levels = b1$entity[order(b1$bananas_index_kg, decreasing = TRUE)])
+b1$entity <- factor(b1$entity, 
+                    levels = b1$entity[order(b1$bananas_index_kg,
+                                             decreasing = TRUE)])
+
 
 # Create a bar plot of each category - meat
+
+#call the data and assign the name 
 q1 <- ggplot(b1, aes(y = bananas_index_kg, x = entity)) +
-  geom_col(fill = "salmon3", alpha = 0.6) + #call the data 
-  labs(x = NULL, y = "Emissions(kg)", title = "Meats") +  #label the proper titles 
+  
+  #set the column color and transparency 
+  geom_col(fill = "salmon3", alpha = 0.6) + 
+  
+  #label titles, did not list X axis bc names were given 
+  labs(x = NULL, y = "Emissions(kg)", title = "Meats") +  
+  
+  #adjust theme (removed grid lines)
   theme_classic() +
-  scale_y_continuous(expand = c(0, 0)) + #this removes the space between 0 and axis 
+  
+  #use this to remove the space between 0 and y axis 
+  scale_y_continuous(expand = c(0, 0)) + 
+  
+  #set the font 
   theme(text = element_text(family = "montserrat"),
+        
+        #adjust the title color, size, and center 
         plot.title = element_text(face = "bold",
                                   size = 100,
                                   color = "tan4",
                                   hjust = 0.5),
+        
+        #adjust the x axis text color and size 
         axis.title.x = element_text(size = 100,
                                     color = "tan4"),
-        plot.background = element_rect(fill = "oldlace", color = "oldlace"),
-        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
-        axis.text = element_text(size = 100, color = "tan4")) + #edit text and theme 
+        
+        #set the plot background color 
+        plot.background = element_rect(fill = "oldlace", 
+                                       color = "oldlace"),
+        
+        #set the panel background color 
+        panel.background = element_rect(fill = "oldlace", 
+                                        color = "oldlace"),
+        
+        #set the axis text color and size
+        axis.text = element_text(size = 100, color = "tan4")) + 
+  
+  #flip the bar 
   coord_flip()
 
 # Reorder the levels of the entity variable based on bananas_index_kg
-b2$entity <- factor(b2$entity, levels = b2$entity[order(b2$bananas_index_kg, decreasing = TRUE)])
+b2$entity <- factor(b2$entity, levels =
+                      b2$entity[order(b2$bananas_index_kg,
+                                      decreasing = TRUE)])
 
 # create a bar plot of each category - dairy
 q2 <- ggplot(b2, aes(y = bananas_index_kg, x = entity)) + #call the data 
-  geom_col(fill = "gold", alpha = 0.6) + #set the color and transparency
-  labs(x = NULL, y = "Emissions(kg)", title = "Dairy Products") + #label the axes
-  theme_classic() + #remove the gridlines 
+  
+  #set the color and transparency
+  geom_col(fill = "gold", alpha = 0.6) + 
+  
+  #remove x axis name and edit y axis and title 
+  labs(x = NULL, y = "Emissions(kg)", title = "Dairy Products") + 
+  
+  #set the theme to removing gridlines
+  theme_classic() + 
+  
+  #remove the space between 0 and y axis 
   scale_y_continuous(expand = c(0, 0)) +
+  
+  #edit the theme, text, and, color (explained above)
   theme(text = element_text(family = "montserrat"),
         plot.title = element_text(face = "bold",
                                   size = 100,
@@ -228,45 +329,92 @@ q2 <- ggplot(b2, aes(y = bananas_index_kg, x = entity)) + #call the data
                                   hjust = 0.5),
         axis.title.x = element_text(size = 100,
                                     color = "tan4"),
-        plot.background = element_rect(fill = "oldlace", color = "oldlace"),
-        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
-        axis.text = element_text(size = 100, color = "tan4")) + #edit the text and font 
+        plot.background = element_rect(fill = "oldlace", 
+                                       color = "oldlace"),
+        panel.background = element_rect(fill = "oldlace", 
+                                        color = "oldlace"),
+        axis.text = element_text(size = 100, color = "tan4")) +
+  
+  #flip the coordinates
   coord_flip()
 
+#repeat the same process as above 
 # Reorder the levels of the entity variable based on bananas_index_kg
-b3$entity <- factor(b3$entity, levels = b3$entity[order(b3$bananas_index_kg, decreasing = TRUE)])
+b3$entity <- factor(b3$entity, levels =
+                      b3$entity[order(b3$bananas_index_kg,
+                                      decreasing = TRUE)])
 
 # Plot with reordered levels
 q3 <- ggplot(b3, aes(x = entity, y = bananas_index_kg)) + 
+  
+  # edit the color and transparency 
   geom_col(fill = "darkolivegreen", alpha = 0.6) + 
+  
+  #edit the title 
   labs(x = NULL, y = "Emissions", title = "Seafood") + 
+  
+  #set theme 
   theme_classic() + 
+  
+  #remove space between 0 and y axis
   scale_y_continuous(expand = c(0, 0)) + 
+  
+  #edit theme elements(shown in bar plot 1 )
   theme(text = element_text(family = "montserrat"),
-        plot.title = element_text(face = "bold", size = 100, color = "tan4", hjust = 0.5),
-        axis.title.x = element_text(size = 100, color = "tan4"),
-        plot.background = element_rect(fill = "oldlace", color = "oldlace"),
-        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
+        plot.title = element_text(face = "bold", 
+                                  size = 100, 
+                                  color = "tan4", 
+                                  hjust = 0.5),
+        axis.title.x = element_text(size = 100, 
+                                    color = "tan4"),
+        plot.background = element_rect(fill = "oldlace", 
+                                       color = "oldlace"),
+        panel.background = element_rect(fill = "oldlace", 
+                                        color = "oldlace"),
         axis.text = element_text(size = 100, color = "tan4")) +
+  
+  #flip the coordinates 
   coord_flip()
 
+
+#patch up all the plots together
 connected <-  (q1 + q2 + q3) 
 
+#edit the entire plot together 
 connected <- connected +
   plot_annotation(
+    
+    #set the title 
     title = "Three Highest Emissions by Food Group",
+    
+    #set the font 
     theme = theme(text = element_text(family = "montserrat"),
-      plot.title = element_text(face = "bold", size = 120, hjust = 0.5, color = "tan4"),
-      panel.background = element_rect(fill = "oldlace", color = "oldlace"),
-      plot.background = element_rect(fill= "oldlace", color = "oldlace"),
-      plot.margin = unit(c(0.3,0,0,0),"in"))
+                  
+                  #edit plot title arguments by size, color, and center 
+                  plot.title = element_text(face = "bold", 
+                                            size = 120, 
+                                            hjust = 0.5, 
+                                            color = "tan4"),
+                  
+                  #set the panel background color 
+                  panel.background = element_rect(fill =
+                                                    "oldlace",
+                                                  color =
+                                                    "oldlace"),
+                  
+                  #edit the plot background color 
+                  plot.background = element_rect(fill= "oldlace",
+                                                 color =
+                                                   "oldlace"),
+                  
+                  #set the margin 
+                  plot.margin = unit(c(0.3,0,0,0),"in"))
     ) 
 
-# specify file path/name and png resolution & size
-ragg::agg_png(here::here("outputs", paste0("connected_bar", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
-              res = 320, width = 45, height = 20, units = "in")
+# # specify file path/name and png resolution & size
+# ragg::agg_png(here::here("outputs", paste0("connected_bar", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
+#               res = 320, width = 25, height = 10, units = "in")
 
-connected
 
 ```
 
