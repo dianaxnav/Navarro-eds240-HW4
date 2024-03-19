@@ -108,8 +108,8 @@ packing <- ggplot() +
   coord_equal() + #balance coordinates 
   
   #set the title 
-  labs(title = "Banana Index Values: Average Greenhouse Gas Emissions by Food Group in 2022",
-       subtitle = "Emissions are measured in kilograms(kg)") + 
+  labs(title = "Visualizing the Banana Index Ratio:",
+       subtitle = "Average Greenhouse Gas Emissions by Food Group in 2022") + 
   
   #set the font 
   theme(text = element_text(family = "montserrat"), 
@@ -124,9 +124,9 @@ packing <- ggplot() +
                                   hjust = 0.5), 
         
         #edit the plot subtitle by color, size, and center
-        plot.subtitle = element_text(size = 100,
+        plot.subtitle = element_text(size = 120,
                                      face = "bold",
-                                     color = "tan",
+                                     color = "tan4",
                                      hjust = 0.5),
         
         #set the plot background color 
@@ -206,7 +206,7 @@ p1 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) + #call the
 p2 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) +
   
   #set the title and x and y axis 
-  labs(title = "Relationship between Emissions and Land Use(kg) of Different Foods", y = "Emissions(kg)", x = "Land Use(kg)") +
+  labs(title = "Relationship between Emissions and Land Use(kg) of the Food Groups", y = "Emissions(kg)", x = "Land Use(kg)") +
   
   #set the theme (i like it plain)
   theme_classic() +
@@ -446,7 +446,7 @@ connected <- connected +
   plot_annotation(
     
     #set the title 
-    title = "Breakdown of Emission Levels (kg) per Food Item among the Top Three Largest Food Groups",
+    title = "Breakdown of Emission Levels (kg) per Food Item among the Top Three Highest Food Groups",
     
     #set the font 
     theme = theme(text = element_text(family = "montserrat"),
