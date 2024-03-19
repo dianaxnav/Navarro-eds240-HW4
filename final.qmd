@@ -66,50 +66,89 @@ clean_bananas <- bananas %>%
 # Add a column with the text you want to display for each bubble:
 clean_bananas$text <- paste("Food Category: ",clean_bananas$food_cat, "\n", "value (kg):", clean_bananas$mean, "\n")
 
-n_distinct(clean_bananas$food_cat) #check how many categories you have 
+#n_distinct(clean_bananas$food_cat) #check how many categories you have 
 
 #this function creates a gradient color palette arranged in 23 different colors 
-my_palette <- colorRampPalette(c("saddlebrown","sienna", "salmon3",
-                                 "orange3", "orange2", "orange", "gold",
-                                 "gold2", "goldenrod1",
-                                 "goldenrod2","goldenrod3",
-                                 "darkolivegreen", "olivedrab4",
+my_palette <- colorRampPalette(c("darkolivegreen","sienna", "gold",
+                                 "orange3", "orange2", "orange",
+                                 "gold2","red4", "goldenrod1", "indianred4",
+                                 "goldenrod2","olivedrab4",
+                                 "saddlebrown", "salmon3",
                                  "darkolivegreen3"))(23)
 
 # Generate the layout
 packing <- circleProgressiveLayout(clean_bananas$mean, sizetype='area') #make the circle layout
+
 data <- cbind(clean_bananas, packing) #combine your circle data to the banana data frame 
+
 dat.gg <- circleLayoutVertices(packing, npoints = 23) #adjust the size of the plot 
 
 # create the plot initilizaing geom_polygon 
 packing <- ggplot() + 
-  geom_polygon(data = dat.gg, aes(x,y,group = id, fill=id), alpha = 0.5) + #this will create the circular plots based off food category, adjust the outline and transparency color of the plot 
-  scale_fill_gradientn(colors = my_palette) + #set the color scheme 
-  geom_text(data = data, aes(x,y, size= mean, label = gsub("Group_", "", food_cat)), color="black", family = "montserrat") + #set text within the circles and edit font, and color  +
-  scale_size_continuous(range = c(15, 40)) +
+  #this will create the circular plots based off food category, adjust the outline and transparency color of the plot 
+  geom_polygon(data = dat.gg, aes(x,y,group = id, fill=id), alpha = 0.5) + 
+  
+  #set the color scheme 
+  scale_fill_gradientn(colors = my_palette) + 
+  
+  #set text within the circles and edit font, and color
+  geom_text(data = data, aes(x,y, size= mean, label = gsub("Group_", "", food_cat)), color="black", family = "montserrat") + 
+  
+  #scale the sizw of the text displayed in each circle
+  scale_size_continuous(range = c(15, 40)) + 
+  
   theme_void() + #remove all axes and plot background 
-  theme(legend.position="none", plot.margin=unit(c(0,0,0,0),"in")) + #set the position of the plot 
+  
+  #remove the legend 
+  theme(legend.position="none", 
+        
+        #set the position of the plot 
+        plot.margin=unit(c(0,0,0,0),"in")) + 
+  
   coord_equal() + #balance coordinates 
-  labs(title = "Average GHG emissions(kg) by Food Group in 2022", subtitle = "Emissions(kg) compared to the Banana") + #set up title and subtitle 
-  theme(text = element_text(family = "montserrat"),
-        plot.title.position = "plot",
+  
+  #set the title 
+  labs(title = "Banana Index Ratio: Average Greenhouse Gas Emissions by Food Group in 2022",
+       subtitle = "Emissions are measured in kilograms(kg)") + 
+  
+  #set the font 
+  theme(text = element_text(family = "montserrat"), 
+        
+        #center position plot title 
+        plot.title.position = "plot", 
+        
+        #edit the plot title by color, size, and bold 
         plot.title = element_text(face = "bold",
                                   size = 120,
                                   color = "tan4",
-                                  hjust = 0.5),
+                                  hjust = 0.5), 
+        
+        #edit the plot subtitle by color, size, and center
         plot.subtitle = element_text(size = 100,
-                                     color = "grey",
+                                     face = "bold",
+                                     color = "tan",
                                      hjust = 0.5),
-        plot.background = element_rect(fill= "oldlace", color = "oldlace"),
-        panel.background = element_rect(fill = "oldlace", color = "oldlace"),
-        plot.margin = unit(c(0.3,0,0,0),"in")) + #edit the font of the subtitle 
+        
+        #set the plot background color 
+        plot.background = element_rect(fill= "oldlace", 
+                                       color = "oldlace"), 
+        
+        #set the panel background color
+        panel.background = element_rect(fill = "oldlace", 
+                                        color = "oldlace"), 
+        
+        #set the plot margin so its not on the edge of png 
+        plot.margin = unit(c(0.3,0,0,0),"in")) + 
+  
+  # highlight top three highest emitters and banana category 
   gghighlight::gghighlight((radius > 1.8 | food_cat == "Banana"),
                            unhighlighted_params = list(colour = NULL, alpha = 0.3))
 
-# # specify file path/name and png resolution & size
-# ragg::agg_png(here::here("outputs", paste0("circularpacking", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
-#               res = 320, width = 15, height =15, units = "in")
+# specify file path/name and png resolution & size
+ragg::agg_png(here::here("outputs", paste0("circularpacking", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")),
+              res = 320, width = 23, height =21.5, units = "in")
 
+packing 
 
 ```
 
@@ -121,7 +160,7 @@ packing <- ggplot() +
 # Create the inset plot
 p1 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) + #call the data and x and y axis 
   
-  geom_point(alpha = 0.5, color = "salmon3", size = 3) + #edit the size and color of points 
+  geom_point(alpha = 0.5, color = "red4", size = 5) + #edit the size and color of points 
   
   theme_classic() +
   
@@ -150,7 +189,18 @@ p1 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) + #call the
         axis.title.y = element_blank(), #remove the axis 
         
         #set the axis text color 
-        axis.text = element_text(size = 80, color = "tan4")) 
+        axis.text = element_text(size = 80, color = "tan4")) +
+  
+  #highlight the banana category 
+  gghighlight::gghighlight(food_cat == "Banana",
+                           label_key = food_cat, 
+                           use_direct_label = TRUE,
+                           calculate_per_facet = TRUE, 
+                           label_params = list(size = 17,
+                                               fill = "oldlace"),
+                           unhighlighted_params = list(colour = "orange", 
+                                                       alpha = 0.2)) 
+
 
 #call the data and set the x and y axis 
 p2 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) +
@@ -166,19 +216,28 @@ p2 <- ggplot(data = bananas, aes(x = land_use_kg, y = emissions_kg)) +
   scale_y_continuous(expand = c(0,0)) +
   
   #set the color and size of the point 
-  geom_point(alpha = 0.5, color = "salmon3", size = 5) +
+  geom_point(alpha = 0.5, color = "red4", size = 5) +
+  
+    gghighlight::gghighlight(emissions_kg > 15,
+                           label_key = food_cat, 
+                           use_direct_label = TRUE,
+                           calculate_per_facet = TRUE,
+                           label_params = list(size = 17,
+                                               fill = "oldlace"),
+                           unhighlighted_params = list(colour = "orange", 
+                                                       alpha = 0.2))  +
   
   #outline the circle im referring to from my inset element
   geom_rect(aes(xmin = 0, xmax = 15, ymin = 0,ymax = 15),
             color = "darkolivegreen",
-            fill = NA,
+            fill = "transparent",
             size = 1) +
   
   #set the best line of fit to see relationship 
-  geom_smooth(method = "lm", 
-              se = FALSE, 
-              color = "darkolivegreen3", #edit the color 
-              linetype = "dashed") + #edit line type 
+  # geom_smooth(method = "lm", 
+  #             se = FALSE, 
+  #             color = "darkolivegreen3", #edit the color 
+  #             linetype = "dashed") + #edit line type 
   
   #set theme and change font of all the plots
   theme(text = element_text(family = "montserrat"),
@@ -223,9 +282,11 @@ scatterplot <- p2 + inset_element(p1,
     )
     )
 
-# # specify file path/name and png resolution & size
-# ragg::agg_png(here::here("outputs", paste0("scatter_plot", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
-#               res = 320, width = 15, height =10, units = "in")
+# specify file path/name and png resolution & size
+ragg::agg_png(here::here("outputs", paste0("scatter_plot", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")),
+              res = 320, width = 15, height =10, units = "in")
+
+scatterplot
 
 
 ```
@@ -260,10 +321,10 @@ b1$entity <- factor(b1$entity,
 # Create a bar plot of each category - meat
 
 #call the data and assign the name 
-q1 <- ggplot(b1, aes(y = bananas_index_kg, x = entity)) +
+q1 <- ggplot(b1, aes(y = emissions_kg, x = entity)) +
   
   #set the column color and transparency 
-  geom_col(fill = "salmon3", alpha = 0.6) + 
+  geom_col(fill = "red4", alpha = 0.6) + 
   
   #label titles, did not list X axis bc names were given 
   labs(x = NULL, y = "Emissions(kg)", title = "Meats") +  
@@ -307,7 +368,7 @@ b2$entity <- factor(b2$entity, levels =
                                       decreasing = TRUE)])
 
 # create a bar plot of each category - dairy
-q2 <- ggplot(b2, aes(y = bananas_index_kg, x = entity)) + #call the data 
+q2 <- ggplot(b2, aes(y = emissions_kg, x = entity)) + #call the data 
   
   #set the color and transparency
   geom_col(fill = "gold", alpha = 0.6) + 
@@ -345,13 +406,13 @@ b3$entity <- factor(b3$entity, levels =
                                       decreasing = TRUE)])
 
 # Plot with reordered levels
-q3 <- ggplot(b3, aes(x = entity, y = bananas_index_kg)) + 
+q3 <- ggplot(b3, aes(x = entity, y = emissions_kg)) + 
   
   # edit the color and transparency 
   geom_col(fill = "darkolivegreen", alpha = 0.6) + 
   
   #edit the title 
-  labs(x = NULL, y = "Emissions", title = "Seafood") + 
+  labs(x = NULL, y = "Emissions(kg)", title = "Seafood") + 
   
   #set theme 
   theme_classic() + 
@@ -385,7 +446,7 @@ connected <- connected +
   plot_annotation(
     
     #set the title 
-    title = "Three Highest Emissions by Food Group",
+    title = "Breakdown of GHG Emissions(kg) from the Three Highest Banana Index Values of the Food Groups",
     
     #set the font 
     theme = theme(text = element_text(family = "montserrat"),
@@ -411,10 +472,11 @@ connected <- connected +
                   plot.margin = unit(c(0.3,0,0,0),"in"))
     ) 
 
-# # specify file path/name and png resolution & size
-# ragg::agg_png(here::here("outputs", paste0("connected_bar", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")), 
-#               res = 320, width = 25, height = 10, units = "in")
+# specify file path/name and png resolution & size
+ragg::agg_png(here::here("outputs", paste0("connected_bar", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png")),
+              res = 320, width = 30, height = 10, units = "in")
 
+connected
 
 ```
 
