@@ -95,7 +95,7 @@ packing <- ggplot() +
   geom_text(data = data, aes(x,y, size= mean, label = gsub("Group_", "", food_cat)), color="black", family = "montserrat") + 
   
   #scale the sizw of the text displayed in each circle
-  scale_size_continuous(range = c(15, 40)) + 
+  scale_size_continuous(range = c(17, 50)) + 
   
   theme_void() + #remove all axes and plot background 
   
@@ -108,7 +108,7 @@ packing <- ggplot() +
   coord_equal() + #balance coordinates 
   
   #set the title 
-  labs(title = "Banana Index Ratio: Average Greenhouse Gas Emissions by Food Group in 2022",
+  labs(title = "Banana Index Values: Average Greenhouse Gas Emissions by Food Group in 2022",
        subtitle = "Emissions are measured in kilograms(kg)") + 
   
   #set the font 
@@ -446,7 +446,7 @@ connected <- connected +
   plot_annotation(
     
     #set the title 
-    title = "Breakdown of GHG Emissions(kg) from the Three Highest Banana Index Values of the Food Groups",
+    title = "Breakdown of Emission Levels (kg) per Food Item among the Top Three Largest Food Groups",
     
     #set the font 
     theme = theme(text = element_text(family = "montserrat"),
